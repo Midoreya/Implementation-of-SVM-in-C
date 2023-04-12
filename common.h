@@ -25,6 +25,7 @@ typedef struct {
 typedef struct {
     float **w;
     float b;
+    int num_svecter;
 } Weight;
 
 typedef struct {

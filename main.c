@@ -14,6 +14,28 @@ Weight create_weight(int classes, int size) {
     return weight;
 }
 
+int print_starting(int class_p, int class_n, int count_0, int count_n,
+                   int count_p) {
+    int total = count_n + count_p + count_0;
+    printf("---------------------------------------\n");
+    printf("Start class[%d], class[%d] training.\n", class_p, class_n);
+    printf("Positive sample count: %d\n", count_p);
+    printf("Negative sample count: %d\n", count_n);
+    printf("Other sample count:    %d\n", count_0);
+    printf("Total sample count:    %d\n", total);
+
+    return 0;
+}
+
+int print_complete(int class_p, int class_n, int count, float use_time) {
+
+    printf("Complete class[%d], class[%d] training.\n", class_p, class_n);
+    printf("Support vecter count = %d, use %.2fs.\n", count, use_time);
+    printf("---------------------------------------\n\n");
+
+    return 0;
+}
+
 Weight training_SMO(Weight weight, int class) { return weight; }
 
 Weight training(Sample data, K_matrix matrix, Parameter parameter) {
@@ -21,11 +43,11 @@ Weight training(Sample data, K_matrix matrix, Parameter parameter) {
     Weight weight = {0};
     weight = create_weight(data.classes, data.size);
 
+    int ret = 0;
     int i = 0, j = 0;
     int i2 = 0;
     int epoch = 0;
     int class_p = 0, class_n = 0;
-    int sv_count = 0;
     clock_t start = 0, finish = 0;
     float use_time = 0;
 
@@ -58,25 +80,19 @@ Weight training(Sample data, K_matrix matrix, Parameter parameter) {
                     }
                 }
 
-                total = count_n + count_p + count_0;
-
-                printf("Start class[%d], class[%d] training.\n", class_p,
-                       class_n);
-                printf("sample_p count = %d\n", count_p);
-                printf("sample_n count = %d\n", count_n);
-                printf("sample_0 count = %d\n", count_0);
-                printf("sample_total count = %d\n", total);
+                ret =
+                    print_starting(class_p, class_n, count_0, count_n, count_p);
 
                 start = clock();
 
                 weight = training_SMO(weight, class_p * data.classes + class_n);
 
                 finish = clock();
+
                 use_time = (float)(finish - start) / 1000000;
-                printf("Complete class[%d], class[%d] training.\n", class_p,
-                       class_n);
-                printf("support vecter count = %d, use %.2fs.\n\n", sv_count,
-                       use_time);
+
+                ret = print_complete(class_p, class_n, weight.num_svecter,
+                                     use_time);
 
                 free(yk);
             }
