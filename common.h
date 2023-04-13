@@ -3,9 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <assert.h>
-#include <time.h>
+#include <sys/time.h>
 
 typedef struct {
     int size;
@@ -16,6 +17,18 @@ typedef struct {
     int *label;
     float *data;
 } Sample;
+
+typedef struct {
+    Sample training;
+    Sample val;
+    Sample test;
+} Dataset;
+
+typedef struct {
+    int training_length;
+    int val_length;
+    int test_length;
+} Split_length;
 
 typedef struct {
     float *data;
@@ -35,5 +48,7 @@ typedef struct {
 } Parameter;
 
 float get_pixel(Sample data, int index, int i, int j);
+
+float get_usetime(struct timeval start, struct timeval end);
 
 #endif
