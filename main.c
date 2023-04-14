@@ -8,8 +8,8 @@ int main(int argc, char **argv) {
     int size = 784;
     int width = 28;
     int height = 28;
-    int length = 42000;
     int classes = 10;
+    int length = 42000;
 
     int training_length = 35000;
     int val_length = 5000;
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     weight = training(data.training, data.val, matrix, parameter);
 
     int ret = 0;
-    ret = write_weight(weight, sample.classes, sample.size, "weight.txt");
+    ret = write_weight(weight, sample.classes, sample.size, "./weight/weight.txt");
     assert(ret == 0);
 
     return 0;
