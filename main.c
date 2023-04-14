@@ -15,6 +15,11 @@ int main(int argc, char **argv) {
     int val_length = 1000;
     int test_length = 1000;
 
+    int max_epoch = 1;
+    int smo_epoch = 100;
+    float c = 1;
+    float ero = 1e-4;
+
     assert(argc != 1);
 
     Sample sample = {0};
@@ -29,13 +34,7 @@ int main(int argc, char **argv) {
     K_matrix matrix = {0};
     matrix = compute_k_matrix(sample);
 
-    // exit(0);
-
     Parameter parameter = {0};
-    int max_epoch = 1;
-    int smo_epoch = 100;
-    float c = 1;
-    float ero = 1e-4;
     parameter = create_parameter(max_epoch, smo_epoch, c, ero);
 
     Weight weight = {0};

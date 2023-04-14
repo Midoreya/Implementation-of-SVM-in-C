@@ -163,8 +163,13 @@ Dataset dataloader(Sample sample, Split_length s_length) {
 
     int ret = 0;
     ret = copy_message(&data.training, &sample, s_length.training_length);
+    assert(ret == 0);
+
     ret = copy_message(&data.val, &sample, s_length.val_length);
+    assert(ret == 0);
+
     ret = copy_message(&data.test, &sample, s_length.test_length);
+    assert(ret == 0);
 
     data = copy_data(data, sample);
     data = copy_label(data, sample);

@@ -56,8 +56,11 @@ typedef struct {
 } Acc;
 
 float get_pixel(int i, int j, Sample data);
-
+float get_matrix(int i, int j, K_matrix matrix);
 float get_usetime(struct timeval start, struct timeval end);
+
+float max_float(float x, float y);
+float min_float(float x, float y);
 
 int write_weight(Weight weight, int class, int size, char *file);
 

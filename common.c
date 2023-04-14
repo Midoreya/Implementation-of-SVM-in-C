@@ -4,6 +4,24 @@ float get_pixel(int i, int j, Sample data) {
     return data.data[data.size * i + j];
 }
 
+float get_matrix(int i, int j, K_matrix matrix) {
+    return matrix.data[matrix.dim * i + j];
+}
+
+float max_float(float x, float y) {
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+
+float min_float(float x, float y) {
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+
 float get_usetime(struct timeval start, struct timeval end) {
 
     long timeuse = 0;

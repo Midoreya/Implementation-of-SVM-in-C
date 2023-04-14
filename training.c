@@ -4,24 +4,6 @@
 #include "training.h"
 #include "val.h"
 
-float max_float(float x, float y) {
-    if (x > y)
-        return x;
-    else
-        return y;
-}
-
-float min_float(float x, float y) {
-    if (x < y)
-        return x;
-    else
-        return y;
-}
-
-float get_matrix(int i, int j, K_matrix matrix) {
-    return matrix.data[matrix.dim * i + j];
-}
-
 float e(int i, int count, float *alpha, float *yk, K_matrix matrix, float b) {
     int j = 0;
     float result = 0;
@@ -46,8 +28,8 @@ float h_operation(int u, int v, float *yk, float *alpha, float c) {
         return min_float(c, alpha[u] + alpha[v]);
 }
 
-Weight compute_wb(Sample data, Weight weight, K_matrix matrix, int class,
-                  float *alpha, float *yk) {
+Weight compute_wb(Sample data, Weight weight, int class, float *alpha,
+                  float *yk) {
     int i = 0, j = 0, d = 0;
     int *s_vector;
 
@@ -102,7 +84,7 @@ int print_complete(Acc acc, int class_p, int class_n, int count,
     return 0;
 }
 
-Weight training_SMO(Weight weight, K_matrix matrix, Sample data, Sample val,
+Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
                     Parameter parameter, float *yk, int class) {
     int i = 0, j = 0;
     int passes = 0, num_changed_alphas = 0;
@@ -200,7 +182,7 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data, Sample val,
         }
     }
 
-    weight = compute_wb(data, weight, matrix, class, alpha, yk);
+    weight = compute_wb(data, weight, class, alpha, yk);
     weight.w[class][data.size] = weight.b;
 
     return weight;
@@ -233,7 +215,7 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
                 int count_n = 0;
                 int count_p = 0;
                 int count_0 = 0;
-                int total = 0;
+                // int total = 0;
 
                 for (j = 0; j < data.length; j++) {
                     if (data.label[j] == class_p) {
@@ -250,10 +232,11 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
 
                 ret =
                     print_starting(class_p, class_n, count_0, count_n, count_p);
+                assert(ret == 0);
 
                 gettimeofday(&start, NULL);
 
-                weight = training_SMO(weight, matrix, data, val, parameter, yk,
+                weight = training_SMO(weight, matrix, data, parameter, yk,
                                       class_p * data.classes + class_n);
 
                 Acc acc = {0};
@@ -264,8 +247,7 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
 
                 ret = print_complete(acc, class_p, class_n, weight.num_svecter,
                                      use_time);
-
-                free(yk);
+                assert(ret == 0);
             }
         }
     }
