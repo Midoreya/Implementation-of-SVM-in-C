@@ -1,9 +1,7 @@
 #include "common.h"
 
-float get_pixel(Sample sample, int index, int i, int j) {
-
-    assert(index < sample.length && i < sample.width && j < sample.height);
-    return sample.data[index * sample.size + i * sample.width + j];
+float get_pixel(int i, int j, Sample data) {
+    return data.data[data.size * i + j];
 }
 
 float get_usetime(struct timeval start, struct timeval end) {

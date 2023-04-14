@@ -3,11 +3,82 @@
 #include "preprocess.h"
 #include "training.h"
 
+float max_float(float x, float y) {
+    if (x > y)
+        return x;
+    else
+        return y;
+}
+
+float min_float(float x, float y) {
+    if (x < y)
+        return x;
+    else
+        return y;
+}
+
+float get_matrix(int i, int j, K_matrix matrix) {
+    return matrix.data[matrix.dim * i + j];
+}
+
+float e(int i, int count, float *alpha, float *yk, K_matrix matrix, float b) {
+    int j = 0;
+    float result = 0;
+    for (j = 0; j < count; j++) {
+        result = result + alpha[j] * yk[j] * get_matrix(i, j, matrix);
+    }
+    result = result + b - yk[i];
+    return result;
+}
+
+float l_operation(int u, int v, float *yk, float *alpha, float c) {
+    if (yk[u] != yk[v])
+        return max_float(0, alpha[u] - alpha[v]);
+    else
+        return max_float(0, alpha[u] + alpha[v] - c);
+}
+
+float h_operation(int u, int v, float *yk, float *alpha, float c) {
+    if (yk[u] != yk[v])
+        return min_float(c, alpha[u] - alpha[v] + c);
+    else
+        return min_float(c, alpha[u] + alpha[v]);
+}
+
+Weight compute_wb(Sample data, Weight weight, K_matrix matrix, int class,
+                  float *alpha, float *yk) {
+    int i = 0, j = 0, d = 0;
+    int *s_vector;
+
+    s_vector = (int *)calloc(data.length, sizeof(int));
+
+    for (i = 0; i < data.length; i++) {
+        if (alpha[i] > 0) {
+            s_vector[j] = i;
+            j = j + 1;
+        }
+    }
+
+    weight.num_svecter = j;
+
+    for (d = 0; d < data.size; d++) {
+        for (i = 0; i < j; i++) {
+            weight.w[class][d] =
+                weight.w[class][d] + alpha[s_vector[i]] * yk[s_vector[i]] *
+                                         get_pixel(s_vector[i], d, data);
+        }
+    }
+
+    free(s_vector);
+
+    return weight;
+}
+
 int print_starting(int class_p, int class_n, int count_0, int count_n,
                    int count_p) {
     int total = count_n + count_p + count_0;
     printf("---------------------------------------\n");
-    printf("Start class[%d], class[%d] training.\n", class_p, class_n);
+    printf("Start class[%d], class[%d] training...\n", class_p, class_n);
     printf("Positive sample count: %d\n", count_p);
     printf("Negative sample count: %d\n", count_n);
     printf("Other sample count:    %d\n", count_0);
@@ -18,14 +89,117 @@ int print_starting(int class_p, int class_n, int count_0, int count_n,
 
 int print_complete(int class_p, int class_n, int count, float use_time) {
 
+    printf("Support vecter count:  %d\n", count);
+    printf("Using:                 %.2fs\n", use_time);
     printf("Complete class[%d], class[%d] training.\n", class_p, class_n);
-    printf("Support vecter count = %d, use %.2fs.\n", count, use_time);
     printf("---------------------------------------\n\n");
 
     return 0;
 }
 
-Weight training_SMO(Weight weight, int class) { return weight; }
+Weight training_SMO(Weight weight, K_matrix matrix, Sample data, Sample val,
+                    Parameter parameter, float *yk, int class) {
+    int i = 0, j = 0;
+    int passes = 0, num_changed_alphas = 0;
+    float alpha_i_old = 0, alpha_j_old = 0;
+    float l = 0, h = 0;
+    float eta = 0;
+    float bi = 0, bj = 0;
+    int count = 0;
+
+    float *alpha;
+    alpha = (float *)calloc(data.length, sizeof(float));
+    weight.b = 0;
+
+    srand(100);
+
+    while (passes < parameter.smo_epoch) {
+        num_changed_alphas = 0;
+        for (i = 0; i < data.length; i++) {
+            if (yk[i] == 0)
+                continue;
+
+            if ((yk[i] * e(i, data.length, alpha, yk, matrix, weight.b) <
+                     -parameter.ero &&
+                 alpha[i] < parameter.c) ||
+                (yk[i] * e(i, data.length, alpha, yk, matrix, weight.b) >
+                     parameter.ero &&
+                 alpha[i] > 0)) {
+                do {
+                    j = rand() % data.length;
+                } while (j == i);
+
+                alpha_i_old = alpha[i];
+                alpha_j_old = alpha[j];
+
+                count++;
+
+                l = l_operation(j, i, yk, alpha, parameter.c);
+                h = h_operation(j, i, yk, alpha, parameter.c);
+
+                if (fabs(l - h) < parameter.ero)
+                    continue;
+
+                eta = 2 * get_matrix(i, j, matrix) - get_matrix(i, i, matrix) -
+                      get_matrix(j, j, matrix);
+
+                if (eta >= 0)
+                    continue;
+
+                alpha[j] =
+                    alpha[j] -
+                    yk[j] *
+                        (e(i, data.length, alpha, yk, matrix, weight.b) -
+                         e(j, data.length, alpha, yk, matrix, weight.b)) /
+                        eta;
+
+                if (alpha[j] > h)
+                    alpha[j] = h;
+                if (alpha[j] < l)
+                    alpha[j] = l;
+
+                if (fabs(alpha[j] - alpha_j_old) <= fabs(1e-4 * alpha[j]))
+                    continue;
+
+                alpha[i] = alpha[i] + yk[i] * yk[j] * (alpha_j_old - alpha[j]);
+
+                bi =
+                    weight.b - e(i, data.length, alpha, yk, matrix, weight.b) -
+                    yk[i] * (alpha[i] - alpha_i_old) *
+                        get_matrix(i, i, matrix) -
+                    yk[j] * (alpha[j] - alpha_j_old) * get_matrix(i, j, matrix);
+                bj =
+                    weight.b - e(j, data.length, alpha, yk, matrix, weight.b) -
+                    yk[i] * (alpha[i] - alpha_i_old) *
+                        get_matrix(i, j, matrix) -
+                    yk[j] * (alpha[j] - alpha_j_old) * get_matrix(j, j, matrix);
+
+                if (alpha[i] < parameter.c && alpha[i] > 0)
+                    weight.b = bi;
+                else if (alpha[j] < parameter.c && alpha[j] > 0)
+                    weight.b = bj;
+                else
+                    weight.b = (bi + bj) * 0.5;
+                num_changed_alphas = num_changed_alphas + 1;
+            }
+
+            if (count > parameter.smo_epoch) {
+                count = 0;
+                passes = passes + 1;
+            }
+
+            if (num_changed_alphas == 0)
+                passes = passes + 1;
+            else
+                passes = 0;
+        }
+    }
+
+    weight = compute_wb(data, weight, matrix, class, alpha, yk);
+    weight.w[class][data.size] = weight.b;
+
+    return weight;
+}
 
 Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
 
@@ -41,8 +215,7 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
     float use_time = 0;
     struct timeval start, end;
 
-    float *yk, *alpha;
-
+    float *yk;
     for (epoch = 0; epoch < parameter.max_epoch; epoch++) {
         for (i = 0; i < data.classes; i++) {
             class_p = i;
@@ -75,7 +248,8 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
 
                 gettimeofday(&start, NULL);
 
-                weight = training_SMO(weight, class_p * data.classes + class_n);
+                weight = training_SMO(weight, matrix, data, val, parameter, yk,
+                                      class_p * data.classes + class_n);
 
                 gettimeofday(&end, NULL);
                 use_time = get_usetime(start, end);

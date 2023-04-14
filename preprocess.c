@@ -3,9 +3,10 @@
 #include "common.h"
 #include "preprocess.h"
 
-Parameter create_parameter(int max_epoch, float c, float ero) {
+Parameter create_parameter(int max_epoch, int smo_epoch, float c, float ero) {
 
     Parameter parameter = {0};
+    parameter.smo_epoch = smo_epoch;
     parameter.max_epoch = max_epoch;
     parameter.c = c;
     parameter.ero = ero;
@@ -151,6 +152,9 @@ Dataset copy_label(Dataset data, Sample sample) {
 Dataset dataloader(Sample sample, Split_length s_length) {
 
     Dataset data = {0};
+    assert(s_length.training_length + s_length.val_length +
+               s_length.test_length ==
+           sample.length);
 
     float use_time = 0;
     struct timeval start, end;

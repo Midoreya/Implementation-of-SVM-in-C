@@ -6,7 +6,7 @@ Sample create_sample(char *path, int size, int height, int width, int length,
 
 K_matrix compute_k_matrix(Sample sample);
 
-Parameter create_parameter(int epoch, float c, float ero);
+Parameter create_parameter(int max_epoch, int smo_epoch, float c, float ero);
 
 Weight create_weight(int classes, int size);
 

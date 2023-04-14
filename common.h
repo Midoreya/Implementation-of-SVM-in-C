@@ -1,6 +1,7 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,11 +44,12 @@ typedef struct {
 
 typedef struct {
     int max_epoch;
+    int smo_epoch;
     float c;
     float ero;
 } Parameter;
 
-float get_pixel(Sample data, int index, int i, int j);
+float get_pixel(int i, int j, Sample data);
 
 float get_usetime(struct timeval start, struct timeval end);
 
