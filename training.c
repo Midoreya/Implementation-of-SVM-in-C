@@ -92,7 +92,7 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
     float l = 0, h = 0;
     float eta = 0;
     float bi = 0, bj = 0;
-    int count = 0;
+    int epoch = 0;
 
     float *alpha;
     alpha = (float *)calloc(data.length, sizeof(float));
@@ -119,7 +119,7 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
                 alpha_i_old = alpha[i];
                 alpha_j_old = alpha[j];
 
-                count++;
+                epoch++;
 
                 l = l_operation(j, i, yk, alpha, parameter.c);
                 h = h_operation(j, i, yk, alpha, parameter.c);
@@ -170,8 +170,8 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
                 num_changed_alphas = num_changed_alphas + 1;
             }
 
-            if (count > parameter.smo_epoch) {
-                count = 0;
+            if (epoch > parameter.smo_epoch) {
+                epoch = 0;
                 passes = passes + 1;
             }
 
@@ -215,7 +215,6 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
                 int count_n = 0;
                 int count_p = 0;
                 int count_0 = 0;
-                // int total = 0;
 
                 for (j = 0; j < data.length; j++) {
                     if (data.label[j] == class_p) {

@@ -8,12 +8,12 @@ int main(int argc, char **argv) {
     int size = 784;
     int width = 28;
     int height = 28;
-    int length = 5000;
+    int length = 42000;
     int classes = 10;
 
-    int training_length = 3000;
-    int val_length = 1000;
-    int test_length = 1000;
+    int training_length = 35000;
+    int val_length = 5000;
+    int test_length = 2000;
 
     int max_epoch = 1;
     int smo_epoch = 100;
