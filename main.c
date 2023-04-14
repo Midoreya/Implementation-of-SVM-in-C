@@ -41,5 +41,9 @@ int main(int argc, char **argv) {
     Weight weight = {0};
     weight = training(data.training, data.val, matrix, parameter);
 
+    int ret = 0;
+    ret = write_weight(weight, sample.classes, sample.size, "weight.txt");
+    assert(ret == 0);
+
     return 0;
 }

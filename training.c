@@ -2,6 +2,7 @@
 
 #include "preprocess.h"
 #include "training.h"
+#include "val.h"
 
 float max_float(float x, float y) {
     if (x > y)
@@ -82,14 +83,18 @@ int print_starting(int class_p, int class_n, int count_0, int count_n,
     printf("Positive sample count: %d\n", count_p);
     printf("Negative sample count: %d\n", count_n);
     printf("Other sample count:    %d\n", count_0);
-    printf("Total sample count:    %d\n", total);
+    printf("Total sample count:    %d\n\n", total);
 
     return 0;
 }
 
-int print_complete(int class_p, int class_n, int count, float use_time) {
+int print_complete(Acc acc, int class_p, int class_n, int count,
+                   float use_time) {
 
     printf("Support vecter count:  %d\n", count);
+    printf("True:                  %d\n", acc.true);
+    printf("False:                 %d\n", acc.false);
+    printf("Accuracy:              %.2f%%\n", acc.acc * 100);
     printf("Using:                 %.2fs\n", use_time);
     printf("Complete class[%d], class[%d] training.\n", class_p, class_n);
     printf("---------------------------------------\n\n");
@@ -251,10 +256,13 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
                 weight = training_SMO(weight, matrix, data, val, parameter, yk,
                                       class_p * data.classes + class_n);
 
+                Acc acc = {0};
+                acc = validation(val, weight);
+
                 gettimeofday(&end, NULL);
                 use_time = get_usetime(start, end);
 
-                ret = print_complete(class_p, class_n, weight.num_svecter,
+                ret = print_complete(acc, class_p, class_n, weight.num_svecter,
                                      use_time);
 
                 free(yk);

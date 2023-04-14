@@ -49,8 +49,16 @@ typedef struct {
     float ero;
 } Parameter;
 
+typedef struct {
+    int true;
+    int false;
+    float acc;
+} Acc;
+
 float get_pixel(int i, int j, Sample data);
 
 float get_usetime(struct timeval start, struct timeval end);
+
+int write_weight(Weight weight, int class, int size, char *file);
 
 #endif

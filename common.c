@@ -15,3 +15,22 @@ float get_usetime(struct timeval start, struct timeval end) {
 
     return time;
 }
+
+int write_weight(Weight weight, int class, int size, char *file) {
+    int i = 0, j = 0;
+    FILE *fp;
+
+    fp = fopen(file, "wb");
+
+    for (i = 0; i < class * class; i++) {
+        for (j = 0; j < size + 1; j++) {
+            if (j == size)
+                fprintf(fp, "%lf \n", weight.w[i][j] * pow(10, 3));
+            else
+                fprintf(fp, "%lf ", weight.w[i][j] * pow(10, 3));
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
