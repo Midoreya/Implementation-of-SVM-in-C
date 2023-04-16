@@ -58,9 +58,10 @@ Weight compute_wb(Sample data, Weight weight, int class, float *alpha,
 }
 
 int print_starting(int class_p, int class_n, int count_0, int count_n,
-                   int count_p) {
+                   int count_p, int max_epoch, int epoch) {
     int total = count_n + count_p + count_0;
     printf("---------------------------------------\n");
+    printf("Epoch [%d/%d]\n", epoch + 1, max_epoch);
     printf("Start class[%d], class[%d] training...\n", class_p, class_n);
     printf("Positive sample count: %d\n", count_p);
     printf("Negative sample count: %d\n", count_n);
@@ -87,7 +88,6 @@ int print_complete(Acc acc, int class_p, int class_n, int count,
 Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
                     Parameter parameter, float *yk, int class) {
     int i = 0, j = 0;
-    int passes = 0, num_changed_alphas = 0;
     float alpha_i_old = 0, alpha_j_old = 0;
     float l = 0, h = 0;
     float eta = 0;
@@ -100,8 +100,7 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
 
     srand(100);
 
-    while (passes < parameter.smo_epoch) {
-        num_changed_alphas = 0;
+    while (epoch < parameter.smo_epoch) {
         for (i = 0; i < data.length; i++) {
             if (yk[i] == 0)
                 continue;
@@ -118,8 +117,6 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
 
                 alpha_i_old = alpha[i];
                 alpha_j_old = alpha[j];
-
-                epoch++;
 
                 l = l_operation(j, i, yk, alpha, parameter.c);
                 h = h_operation(j, i, yk, alpha, parameter.c);
@@ -167,19 +164,10 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
                     weight.b = bj;
                 else
                     weight.b = (bi + bj) * 0.5;
-                num_changed_alphas = num_changed_alphas + 1;
             }
-
-            if (epoch > parameter.smo_epoch) {
-                epoch = 0;
-                passes = passes + 1;
-            }
-
-            if (num_changed_alphas == 0)
-                passes = passes + 1;
-            else
-                passes = 0;
         }
+
+        epoch = epoch + 1;
     }
 
     weight = compute_wb(data, weight, class, alpha, yk);
@@ -188,10 +176,8 @@ Weight training_SMO(Weight weight, K_matrix matrix, Sample data,
     return weight;
 }
 
-Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
-
-    Weight weight = {0};
-    weight = create_weight(data.classes, data.size);
+Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter,
+                Weight weight) {
 
     int ret = 0;
     int i = 0, j = 0;
@@ -200,9 +186,11 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
     int class_p = 0, class_n = 0;
 
     float use_time = 0;
+    float total_time = 0;
     struct timeval start, end;
 
     float *yk;
+    Acc acc = {0};
     for (epoch = 0; epoch < parameter.max_epoch; epoch++) {
         for (i = 0; i < data.classes; i++) {
             class_p = i;
@@ -229,20 +217,19 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
                     }
                 }
 
-                ret =
-                    print_starting(class_p, class_n, count_0, count_n, count_p);
+                ret = print_starting(class_p, class_n, count_0, count_n,
+                                     count_p, parameter.max_epoch, epoch);
                 assert(ret == 0);
 
                 gettimeofday(&start, NULL);
 
                 weight = training_SMO(weight, matrix, data, parameter, yk,
                                       class_p * data.classes + class_n);
-
-                Acc acc = {0};
                 acc = validation(val, weight);
 
                 gettimeofday(&end, NULL);
                 use_time = get_usetime(start, end);
+                total_time = total_time + use_time;
 
                 ret = print_complete(acc, class_p, class_n, weight.num_svecter,
                                      use_time);
@@ -250,6 +237,14 @@ Weight training(Sample data, Sample val, K_matrix matrix, Parameter parameter) {
             }
         }
     }
+
+    printf("---------------------------------------\n");
+    printf("Complete training.\n");
+    printf("Accuracy:     %.2f%%\n", acc.acc * 100);
+    printf("Using:        %.2fs\n", total_time);
+    printf("              %.2fm\n", total_time / 60);
+    printf("              %.2fh\n", total_time / 3600);
+    printf("---------------------------------------\n\n");
 
     return weight;
 }

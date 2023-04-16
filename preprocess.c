@@ -38,13 +38,17 @@ Sample create_sample(char *path, int size, int height, int width, int length,
 
     gettimeofday(&start, NULL);
 
+    int ret = 0;
     for (i = 0; i < length; i++) {
         for (j = 0; j < size + 1; j++) {
             if (j == 0) {
-                fscanf(fp, "%d", &sample.label[i]);
+                ret = fscanf(fp, "%d", &sample.label[i]);
+                assert(ret == 1);
                 continue;
-            } else
-                fscanf(fp, "%f", &sample.data[i * size + j]);
+            } else {
+                ret = fscanf(fp, "%f", &sample.data[i * size + j]);
+                assert(ret == 1);
+            }
         }
     }
 
@@ -54,7 +58,7 @@ Sample create_sample(char *path, int size, int height, int width, int length,
     printf("-------------------------\n");
     printf("Create sample complete:\n");
     printf("Using:   %.2fs\n", use_time);
-    printf("length:  %d\nsize:    %d\nwidth:   %d\nheight:  %d\nclasses: %d\n",
+    printf("Length:  %d\nSize:    %d\nWidth:   %d\nHeight:  %d\nClasses: %d\n",
            sample.length, sample.size, sample.width, sample.height,
            sample.classes);
     printf("-------------------------\n\n");
@@ -71,6 +75,36 @@ Weight create_weight(int classes, int size) {
     for (i = 0; i < classes * classes; i++) {
         weight.w[i] = (float *)calloc(size + 1, sizeof(float));
     }
+
+    return weight;
+}
+
+Weight load_weight(char *weight_path, int size, int classes) {
+
+    FILE *fp;
+    int i = 0, j = 0;
+    int ret = 0;
+
+    fp = fopen(weight_path, "r");
+    assert(fp != NULL);
+
+    Weight weight = {0};
+    weight = create_weight(classes, size);
+
+    for (i = 0; i < classes * classes; i++) {
+        for (j = 0; j < size + 1; j++) {
+            ret = fscanf(fp, "%f", &weight.w[i][j]);
+            assert(ret == 1);
+        }
+    }
+
+    fclose(fp);
+
+    printf("-------------------------\n");
+    printf("Use pretrain weight.\n");
+    printf("Start load weight...\n");
+    printf("Complete.\n");
+    printf("-------------------------\n\n");
 
     return weight;
 }
@@ -180,10 +214,9 @@ Dataset dataloader(Sample sample, Split_length s_length) {
     printf("-------------------------\n");
     printf("Data loader complete:\n");
     printf("Using:           %.2fs\n", use_time);
-    printf("training length: %d\n", data.training.length);
-    printf("val length:      %d\n", data.val.length);
-    printf("test length:     %d\n", data.test.length);
-
+    printf("Training length: %d\n", data.training.length);
+    printf("Val length:      %d\n", data.val.length);
+    printf("Test length:     %d\n", data.test.length);
     printf("-------------------------\n\n");
 
     return data;

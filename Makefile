@@ -1,11 +1,10 @@
 BIN=test
 
-CC=gcc
+CC=gcc 
 CXX=g++
 
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -O3
 
-# LIBS= -ljpeg -lm
 LIBS= -lm -lopenblas
 SRCS=$(wildcard *.c)
 OBJS=$(addsuffix .o, $(basename $(SRCS)))
@@ -17,7 +16,7 @@ OBJS=$(addsuffix .o, $(basename $(SRCS)))
 all: $(BIN) 
 
 $(BIN): $(OBJS)
-	$(CXX) $(CFLAGS) $(LFLAGS) $(EXTRALFLAGS) $^  $(LIBS) -o $@
+	$(CXX) $(CFLAGS) $^  $(LIBS) -o $@
 
 .PHONY: clean
 clean:
